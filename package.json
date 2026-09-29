@@ -1,6 +1,6 @@
 {
   "name": "@rakib045/agentic-sdlc-tools",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Agentic AI SDLC kit — agents, skills, rules and slash commands (/spec, /plan, /build, /test, /code-review, /deploy) with multi-tool support (Claude, OpenCode, Codex, Gemini, GitHub Copilot).",
   "license": "MIT",
   "author": "Rakib Hasan",

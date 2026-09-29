@@ -1,4 +1,4 @@
-export type ToolId = "claude" | "opencode" | "codex" | "gemini" | "github";
+export type ToolId = "claude" | "opencode" | "codex" | "gemini" | "github" | "cursor";
 
 export interface ToolTarget {
   id: ToolId;
@@ -7,6 +7,8 @@ export interface ToolTarget {
   commandsDir: string;
   skillsDir: string;
   rulesFile: string;
+  /** Optional YAML frontmatter prepended (before everything) for tools like Cursor that require it. */
+  rulesFrontmatter?: string;
 }
 
 export const TOOLS: Record<ToolId, ToolTarget> = {
@@ -49,6 +51,15 @@ export const TOOLS: Record<ToolId, ToolTarget> = {
     commandsDir: ".github/prompts",
     skillsDir: ".github/skills",
     rulesFile: ".github/copilot-instructions.md",
+  },
+  cursor: {
+    id: "cursor",
+    label: "Cursor",
+    agentsDir: ".cursor/agents",
+    commandsDir: ".cursor/commands",
+    skillsDir: ".cursor/skills",
+    rulesFile: ".cursor/rules/global.md",
+    rulesFrontmatter: "---\ndescription: Global SDLC rules (always apply)\nalwaysApply: true\n---",
   },
 };
 

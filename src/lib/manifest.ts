@@ -6,20 +6,31 @@ export type Category = "agents" | "commands" | "skills" | "rules";
 
 export const CATEGORIES: Category[] = ["agents", "commands", "skills", "rules"];
 
-/** Resolve templates dir both in dev (skills/) and published (dist/templates). */
+/** Walk up to the package root (dir containing package.json). */
+function packageRoot(from: string): string | null {
+  let dir = from;
+  for (let i = 0; i < 6; i++) {
+    if (existsSync(join(dir, "package.json"))) return dir;
+    const parent = dirname(dir);
+    if (parent === dir) return null;
+    dir = parent;
+  }
+  return null;
+}
+
+/** Resolve templates dir: published (dist/templates) or dev (root-level category folders). */
 export function templatesDir(): string {
   const here = dirname(fileURLToPath(import.meta.url)); // dist/ or src/lib
-  const candidates = [
-    join(here, "templates"), // dist/templates (published)
-    join(here, "..", "templates"), // fallback
-    join(process.cwd(), "skills"), // dev fallback (not used when installed)
-  ];
-  // When running from src via tsx/vitest, templates live at <root>/skills
-  const rootSkills = join(here, "..", "..", "skills");
-  candidates.push(rootSkills);
-  for (const c of candidates) {
-    if (existsSync(c) && existsSync(join(c, "agents"))) return c;
+  // Published layout first: categories under dist/templates.
+  for (const c of [join(here, "templates"), join(here, "..", "templates")]) {
+    if (existsSync(join(c, "agents"))) return c;
   }
+  // Dev layout: agents/, commands/, rules/, skills/ at the package root.
+  const root = packageRoot(here) ?? process.cwd();
+  if (existsSync(join(root, "agents"))) return root;
+  // Legacy fallback: categories under skills/.
+  const legacy = join(root, "skills");
+  if (existsSync(join(legacy, "agents"))) return legacy;
   // default to dist/templates even if missing (error surfaces later)
   return join(here, "templates");
 }

@@ -6,7 +6,7 @@ Agentic AI SDLC kit — agents, skills, rules and slash commands with multi-tool
 - **Commands:** `/spec` `/plan` `/build` `/test` `/code-review` `/deploy` (prompt template + CLI validation via `doctor`)
 - **Rules:** global language-agnostic standards
 - **Skills:** adr-writing, conventional-commits, review-checklist
-- **Tools (v1):** Claude Code, OpenCode, OpenAI Codex, Gemini CLI, GitHub Copilot — from a single source (`skills/`) adapted per tool
+- **Tools (v1):** Claude Code, OpenCode, OpenAI Codex, Gemini CLI, GitHub Copilot, Cursor — from a single source (`agents/`, `commands/`, `rules/`, `skills/` at the repo root) adapted per tool
 
 ## Install
 
@@ -32,7 +32,7 @@ npx agentic-sdlc-tools list --tools
 
 npx agentic-sdlc-tools add agent:senior-developer --tools claude,github
 npx agentic-sdlc-tools add command:spec --tools opencode
-npx agentic-sdlc-tools add skill:adr-writing --tools claude,opencode,codex,gemini,github
+npx agentic-sdlc-tools add skill:adr-writing --tools claude,opencode,codex,gemini,github,cursor
 npx agentic-sdlc-tools add rule:global --tools claude
 ```
 
@@ -58,6 +58,7 @@ npx agentic-sdlc-tools doctor
 | Codex | `.codex/agents/` | `.codex/commands/` | `.codex/skills/` | `AGENTS.md` |
 | Gemini | `.gemini/agents/` | `.gemini/commands/` | `.gemini/skills/` | `GEMINI.md` |
 | GitHub | `.github/agents/` | `.github/prompts/` | `.github/skills/` | `.github/copilot-instructions.md` |
+| Cursor | `.cursor/agents/` | `.cursor/commands/` | `.cursor/skills/` | `.cursor/rules/global.md` (with `alwaysApply` frontmatter) |
 
 ## SDLC flow
 

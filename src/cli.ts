@@ -56,7 +56,7 @@ function installCategory(
       const content = readItem(category, name);
       if (category === "rules") {
         const dest = targetPath(cwd, t.rulesFile);
-        const res = mergeRulesFile(content, dest, { force: opts.force, dryRun: opts.dryRun });
+        const res = mergeRulesFile(content, dest, { force: opts.force, dryRun: opts.dryRun, frontmatter: t.rulesFrontmatter });
         if (res.status === "created" || res.status === "overwritten") created++;
         else if (res.status === "skipped-identical" || res.status === "dry-run") skipped++;
         else conflicts.push(`${tool}:${dest} (exists — re-run with --force to overwrite, backup kept)`);

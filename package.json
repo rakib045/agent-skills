@@ -20,6 +20,7 @@
     "codex",
     "gemini",
     "copilot",
+    "cursor",
     "agents",
     "skills",
     "slash-commands"
@@ -41,8 +42,7 @@
     "prepublishOnly": "npm run build"
   },
   "publishConfig": {
-    "access": "public",
-    "provenance": true
+    "access": "public"
   },
   "engines": {
     "node": ">=20"

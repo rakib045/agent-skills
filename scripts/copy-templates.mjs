@@ -1,20 +1,24 @@
-import { copyFileSync, cpSync, existsSync, mkdirSync, readdirSync } from "node:fs";
+import { copyFileSync, cpSync, existsSync, mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const src = join(root, "skills");
+// Single source: root-level category folders (agents/, commands/, rules/, skills/).
+const categories = ["agents", "commands", "rules", "skills"];
 const dest = join(root, "dist", "templates");
 
 mkdirSync(dest, { recursive: true });
-if (existsSync(src)) {
-  for (const entry of readdirSync(src)) {
-    cpSync(join(src, entry), join(dest, entry), { recursive: true });
+const copied = [];
+for (const cat of categories) {
+  const src = join(root, cat);
+  if (existsSync(src)) {
+    cpSync(src, join(dest, cat), { recursive: true });
+    copied.push(cat);
   }
-  // manifest for CLI discovery
-  const manifest = { version: "1", categories: readdirSync(src) };
+}
+if (copied.length > 0) {
   copyFileSync(join(root, "package.json"), join(dest, "_package.json"));
-  console.log(`templates copied: ${manifest.categories.join(", ")} -> dist/templates`);
+  console.log(`templates copied: ${copied.join(", ")} -> dist/templates`);
 } else {
-  console.warn("no skills/ directory found, skipping template copy");
+  console.warn("no category folders found, skipping template copy");
 }

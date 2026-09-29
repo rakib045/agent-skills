@@ -40,9 +40,16 @@ export function rulesHeader(tool: string): string {
   return `<!-- Installed by @rakib045/agentic-sdlc-tools for ${tool}. Safe to edit; re-run with --force to update. -->\n\n`;
 }
 
-export function mergeRulesFile(rulesContent: string, destAbs: string, opts: { force?: boolean; dryRun?: boolean } = {}): CopyResult {
+export function mergeRulesFile(
+  rulesContent: string,
+  destAbs: string,
+  opts: { force?: boolean; dryRun?: boolean; frontmatter?: string } = {},
+): CopyResult {
   const header = rulesHeader(destAbs);
-  const full = `${header}${rulesContent.trim()}\n`;
+  // Frontmatter must stay at line 1 for tools like Cursor that parse it.
+  const full = opts.frontmatter
+    ? `${opts.frontmatter.trim()}\n\n${header}${rulesContent.trim()}\n`
+    : `${header}${rulesContent.trim()}\n`;
   return copySafe(full, destAbs, opts);
 }
 

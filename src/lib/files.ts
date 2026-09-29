@@ -1,5 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { applyEnvelope } from "./frontmatter.js";
 
 export interface CopyResult {
   dest: string;
@@ -45,11 +46,7 @@ export function mergeRulesFile(
   destAbs: string,
   opts: { force?: boolean; dryRun?: boolean; frontmatter?: string } = {},
 ): CopyResult {
-  const header = rulesHeader(destAbs);
-  // Frontmatter must stay at line 1 for tools like Cursor that parse it.
-  const full = opts.frontmatter
-    ? `${opts.frontmatter.trim()}\n\n${header}${rulesContent.trim()}\n`
-    : `${header}${rulesContent.trim()}\n`;
+  const full = applyEnvelope(rulesContent, { frontmatter: opts.frontmatter, header: rulesHeader(destAbs) });
   return copySafe(full, destAbs, opts);
 }
 

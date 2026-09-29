@@ -3,7 +3,8 @@ import { mkdtempSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { copySafe, mergeRulesFile } from "../src/lib/files.js";
-import { parseTools } from "../src/lib/tools.js";
+import { ALL_TOOL_IDS, getAdapter, parseTools } from "../src/adapters/index.js";
+import { applyEnvelope, buildFrontmatter } from "../src/lib/frontmatter.js";
 import { listItems } from "../src/lib/manifest.js";
 
 describe("tools", () => {
@@ -46,11 +47,36 @@ describe("cursor rules", () => {
   it("puts frontmatter at line 1", () => {
     const dir = mkdtempSync(join(tmpdir(), "ast-cursor-"));
     const dest = join(dir, "global.md");
-    const fm = "---\ndescription: Global SDLC rules (always apply)\nalwaysApply: true\n---";
+    const fm = buildFrontmatter({ description: "Global SDLC rules (always apply)", alwaysApply: true });
     const res = mergeRulesFile("# Global Rules", dest, { frontmatter: fm });
     expect(res.status).toBe("created");
     const content = readFileSync(dest, "utf8");
     expect(content.startsWith("---\n")).toBe(true);
     expect(content).toContain("alwaysApply: true");
+  });
+});
+
+describe("adapters", () => {
+  it("registers six tools with unique ids", () => {
+    expect(ALL_TOOL_IDS).toEqual(["claude", "opencode", "codex", "gemini", "github", "cursor"]);
+  });
+  it("maps github commands to *.prompt.md with agent frontmatter", () => {
+    const adapter = getAdapter("github");
+    expect(adapter.target("commands", "spec")).toBe(".github/prompts/spec.prompt.md");
+    const fm = adapter.frontmatter("commands", "spec");
+    expect(fm).toContain("mode: agent");
+    expect(adapter.target("rules", "global")).toBe(".github/copilot-instructions.md");
+  });
+  it("gives cursor global rule alwaysApply frontmatter", () => {
+    const adapter = getAdapter("cursor");
+    expect(adapter.target("rules", "global")).toBe(".cursor/rules/global.md");
+    expect(adapter.frontmatter("rules", "global")).toContain("alwaysApply: true");
+    expect(adapter.frontmatter("agents", "senior-developer")).toBeNull();
+  });
+  it("keeps envelope order: frontmatter, header, content", () => {
+    const out = applyEnvelope("body", { frontmatter: "---\na: b\n---", header: "<!-- h -->\n\n" });
+    expect(out.indexOf("---")).toBe(0);
+    expect(out.indexOf("<!-- h -->")).toBeGreaterThan(0);
+    expect(out.indexOf("body")).toBeGreaterThan(out.indexOf("<!-- h -->"));
   });
 });

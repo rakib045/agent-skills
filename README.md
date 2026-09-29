@@ -64,7 +64,7 @@ npx @rakib045/agentic-sdlc-tools doctor           # validate spec/plan/test arti
 | OpenCode | `.opencode/agents/` | `.opencode/commands/` | `.opencode/skills/` | `AGENTS.md` |
 | Codex | `.codex/agents/` | `.codex/commands/` | `.codex/skills/` | `AGENTS.md` |
 | Gemini | `.gemini/agents/` | `.gemini/commands/` | `.gemini/skills/` | `GEMINI.md` |
-| GitHub | `.github/agents/` | `.github/prompts/` | `.github/skills/` | `.github/copilot-instructions.md` |
+| GitHub | `.github/agents/` | `.github/prompts/` (`*.prompt.md`) | `.github/skills/` | `.github/copilot-instructions.md` |
 | Cursor | `.cursor/agents/` | `.cursor/commands/` | `.cursor/skills/` | `.cursor/rules/global.md` (with `alwaysApply` frontmatter) |
 
 ## SDLC flow

@@ -3,8 +3,9 @@ import { createInterface } from "node:readline/promises";
 import { stdin, stdout } from "node:process";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { ALL_TOOL_IDS, TOOLS, parseTools, type ToolId } from "./lib/tools.js";
-import { copySafe, mergeRulesFile, targetPath } from "./lib/files.js";
+import { ALL_TOOL_IDS, getAdapter, parseTools, type ToolId } from "./adapters/index.js";
+import { copySafe, rulesHeader, targetPath } from "./lib/files.js";
+import { applyEnvelope } from "./lib/frontmatter.js";
 import { listItems, manifest, readItem, type Category } from "./lib/manifest.js";
 
 const program = new Command();
@@ -45,28 +46,16 @@ function installCategory(
   let skipped = 0;
   const conflicts: string[] = [];
   for (const tool of tools) {
-    const t = TOOLS[tool];
-    const dirMap: Record<Category, string> = {
-      agents: t.agentsDir,
-      commands: t.commandsDir,
-      skills: t.skillsDir,
-      rules: t.rulesFile, // handled separately
-    };
+    const adapter = getAdapter(tool);
     for (const name of names) {
-      const content = readItem(category, name);
-      if (category === "rules") {
-        const dest = targetPath(cwd, t.rulesFile);
-        const res = mergeRulesFile(content, dest, { force: opts.force, dryRun: opts.dryRun, frontmatter: t.rulesFrontmatter });
-        if (res.status === "created" || res.status === "overwritten") created++;
-        else if (res.status === "skipped-identical" || res.status === "dry-run") skipped++;
-        else conflicts.push(`${tool}:${dest} (exists — re-run with --force to overwrite, backup kept)`);
-      } else {
-        const dest = targetPath(cwd, join(dirMap[category], `${name}.md`));
-        const res = copySafe(content, dest, { force: opts.force, dryRun: opts.dryRun });
-        if (res.status === "created" || res.status === "overwritten") created++;
-        else if (res.status === "skipped-identical" || res.status === "dry-run") skipped++;
-        else conflicts.push(`${tool}:${dest} (exists — re-run with --force to overwrite)`);
-      }
+      const raw = readItem(category, name);
+      const dest = targetPath(cwd, adapter.target(category, name));
+      // Presentation (paths, frontmatter) is the adapter's job; content stays tool-agnostic.
+      const content = applyEnvelope(raw, { frontmatter: adapter.frontmatter(category, name), header: rulesHeader(dest) });
+      const res = copySafe(content, dest, { force: opts.force, dryRun: opts.dryRun });
+      if (res.status === "created" || res.status === "overwritten") created++;
+      else if (res.status === "skipped-identical" || res.status === "dry-run") skipped++;
+      else conflicts.push(`${tool}:${dest} (exists — re-run with --force to overwrite, backup kept)`);
     }
   }
   return { created, skipped, conflicts };
@@ -95,7 +84,7 @@ program
       rules = rules.filter((r) => r === "global");
     }
     if (!opts.yes && !opts.dryRun) {
-      console.log(`Will install to: ${tools.map((t) => TOOLS[t].label).join(", ")}`);
+      console.log(`Will install to: ${tools.map((t) => getAdapter(t).label).join(", ")}`);
       console.log(`  agents: ${agents.join(", ") || "(none)"}`);
       console.log(`  commands: ${commands.join(", ") || "(none)"}`);
       console.log(`  skills: ${skills.join(", ") || "(none)"}`);
@@ -150,8 +139,7 @@ program
     if (opts.tools) {
       console.log("\n## tools");
       for (const id of ALL_TOOL_IDS) {
-        const t = TOOLS[id];
-        console.log(`  ${id}: agents=${t.agentsDir} commands=${t.commandsDir} skills=${t.skillsDir} rules=${t.rulesFile}`);
+        console.log(`  ${getAdapter(id).describe()}`);
       }
     }
   });
@@ -179,16 +167,19 @@ program
       console.log(`${found ? "PASS" : "WARN"} ${name}: ${found ?? `missing (${candidates.join(" | ")})`}`);
       if (found) ok++;
     }
-    // check at least one tool installed
-    const installed = ALL_TOOL_IDS.filter((id) => {
-      const t = TOOLS[id];
-      try {
-        readFileSync(join(cwd, t.rulesFile));
-        return true;
-      } catch {
-        return false;
-      }
-    });
+    // check at least one tool installed (per-adapter install markers)
+    const installed = ALL_TOOL_IDS.filter((id) =>
+      getAdapter(id)
+        .doctorPaths()
+        .some((rel) => {
+          try {
+            readFileSync(join(cwd, rel));
+            return true;
+          } catch {
+            return false;
+          }
+        }),
+    );
     console.log(`${installed.length > 0 ? "PASS" : "WARN"} kit: ${installed.length > 0 ? `installed for [${installed.join(", ")}]` : "no rules file found — run init"}`);
     console.log(`\n${ok}/${checks.length} artifact checks passed.`);
   });

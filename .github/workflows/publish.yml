@@ -17,6 +17,10 @@ jobs:
         with:
           node-version: 20
           registry-url: https://registry.npmjs.org
+      # OIDC trusted publishing needs npm >= 11; Node 20 ships npm 10,
+      # which publishes without credentials (registry answers 404 on scoped PUT).
+      - run: npm install -g npm@latest
+      - run: npm --version
       - run: npm ci
       - run: npm run lint
       - run: npm test

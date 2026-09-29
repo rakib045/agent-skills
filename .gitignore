@@ -1,0 +1,9 @@
+dist/
+node_modules/
+*.log
+.opencode/
+.claude/
+.codex/
+.gemini/
+*.bak
+*.tmp/

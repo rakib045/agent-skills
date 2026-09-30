@@ -4,6 +4,7 @@ import { stdin, stdout } from "node:process";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { ALL_TOOL_IDS, getAdapter, parseTools, type ToolId } from "./adapters/index.js";
+import { VERSION } from "./version.js";
 import { copySafe, rulesHeader, targetPath } from "./lib/files.js";
 import { applyEnvelope } from "./lib/frontmatter.js";
 import { listItems, manifest, readItem, type Category } from "./lib/manifest.js";
@@ -12,7 +13,7 @@ const program = new Command();
 program
   .name("agentic-sdlc-tools")
   .description("Agentic SDLC kit — install agents, commands, skills and rules into any project")
-  .version("0.1.0");
+  .version(VERSION);
 
 async function confirm(question: string): Promise<boolean> {
   const rl = createInterface({ input: stdin, output: stdout });
